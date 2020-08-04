@@ -4,3 +4,4 @@
 build/
 venv/
 __pycache__/
+src/vf2symbols/_version.py
