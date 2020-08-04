@@ -30,10 +30,10 @@ setup(
     setup_requires=["setuptools_scm"],
     install_requires=[
         "absl-py>=0.9.0",
-        "fonttools>=4.13.0",
+        "fonttools[ufo]>=4.13.0",
         "lxml>=4.0",
+        "nanoemoji>=0.2.0",
         "ninja>=1.10.0.post1",
-        "picosvg>=0.5.0",
     ],
     python_requires=">=3.6",
 

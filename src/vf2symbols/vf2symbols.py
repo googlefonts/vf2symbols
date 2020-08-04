@@ -17,6 +17,8 @@
 Instantiates along wght to populate weight if a wght axis exists.
 
 Assumes a ligature exists for each symbol and infers the name from it.
+Requires a very simple GSUB ligature layout for the time being. There is no
+good reason for this beyond making proof of concept tool setup easier.
 """
 
 from absl import app
@@ -26,8 +28,10 @@ from fontTools.varLib import instancer
 from fontTools import ttLib
 from ninja import ninja_syntax
 import os
+import regex
 import subprocess
 import sys
+from vf2symbols import icon_font
 
 
 FLAGS = flags.FLAGS
@@ -37,6 +41,9 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("build_dir", "build/", "Where build runs.")
 flags.DEFINE_bool("gen_ninja", True, "Whether to regenerate build.ninja")
 flags.DEFINE_bool("exec_ninja", True, "Whether to run ninja.")
+flags.DEFINE_string(
+    "icon_filter", ".*", "Discard icon names that don't contain this regex."
+)
 
 # TODO(rsheeter) support opsz to populate S/M/L
 _SYMBOL_NAME_FONT_WEIGHTS = (
@@ -64,14 +71,14 @@ def _resolve_rel_build(path):
     return os.path.abspath(os.path.join(_build_dir(), path))
 
 
-def _symbols_in_wght_range(wght_range):
+def _symbol_wght_names(wght_range):
     return tuple(n for n, v in _SYMBOL_NAME_FONT_WEIGHTS if v in wght_range)
 
 
-def _create_font_for_symbol_name(
-    ttfont: ttLib.TTFont, symbol_name: str
+def _create_font_for_symbol_wght_name(
+    ttfont: ttLib.TTFont, symbol_wght_name: str
 ) -> ttLib.TTFont:
-    wght_pos = next(v for n, v in _SYMBOL_NAME_FONT_WEIGHTS if n == symbol_name)
+    wght_pos = next(v for n, v in _SYMBOL_NAME_FONT_WEIGHTS if n == symbol_wght_name)
     if "fvar" not in ttfont:
         assert ttfont["OS/2"].usWeightClass == wght_pos
         return ttfont
@@ -85,13 +92,15 @@ def _create_font_for_symbol_name(
     return instancer.instantiateVariableFont(ttfont, axis_positions)
 
 
-def _write_instance_rule(nw, ttfont, symbol_name):
+def _write_instance_rule(nw, ttfont, symbol_wght_name):
     axis_positions = {a.axisTag: "drop" for a in ttfont["fvar"].axes}
-    wght_pos = next(v for n, v in _SYMBOL_NAME_FONT_WEIGHTS if n == symbol_name)
+    wght_pos = next(v for n, v in _SYMBOL_NAME_FONT_WEIGHTS if n == symbol_wght_name)
     axis_positions["wght"] = str(wght_pos)
 
     pos_str = " ".join(f"{k}={v}" for k, v in axis_positions.items())
-    nw.rule(f"Gen_{symbol_name}", f"fonttools varLib.instancer -o $out $in {pos_str}")
+    nw.rule(
+        f"Gen_{symbol_wght_name}", f"fonttools varLib.instancer -o $out $in {pos_str}"
+    )
 
 
 def _write_preamble(nw, font_filename, ttfont, wght_range):
@@ -104,16 +113,33 @@ def _write_preamble(nw, font_filename, ttfont, wght_range):
     nw.variable("src_font", _rel_build(font_filename))
     nw.newline()
 
-    for symbol_name in _symbols_in_wght_range(wght_range):
+    for symbol_name in _symbol_wght_names(wght_range):
         _write_instance_rule(nw, ttfont, symbol_name)
-
     nw.newline()
 
+    module_rule("write_symbol", "--out $out $in")
 
-def _write_instance_builds(nw, font_filename, wght_range):
+
+def _font_file(font_filename, symbol_wght_name):
     name, ext = os.path.splitext(os.path.basename(font_filename))
-    for symbol_name in _symbols_in_wght_range(wght_range):
-        nw.build(f"{name}.{symbol_name}{ext}", f"Gen_{symbol_name}", "$src_font")
+    return f"{name}.{symbol_wght_name}{ext}"
+
+
+def _write_font_builds(nw, font_filename, wght_range):
+    font_files = []
+    for symbol_wght_name in _symbol_wght_names(wght_range):
+        font_files.append(_font_file(font_filename, symbol_wght_name))
+        nw.build(font_files[-1], f"Gen_{symbol_wght_name}", "$src_font")
+    return font_files
+
+
+def _write_symbol_builds(nw, ttfont, font_files):
+    for icon_name in icon_font.extract_icon_names(
+        ttfont, regex.compile(FLAGS.icon_filter)
+    ):
+        nw.build(
+            os.path.join("symbols", icon_name + ".svg"), "write_symbol", font_files
+        )
 
 
 def _run(argv):
@@ -121,24 +147,19 @@ def _run(argv):
         sys.exit("Expected 1 non-flag argument, a font filename")
     font_filename = os.path.abspath(argv[1])
     root_font = ttLib.TTFont(font_filename)
-    wght_range = range(
-        root_font["OS/2"].usWeightClass, root_font["OS/2"].usWeightClass + 1
-    )
-    if "fvar" in root_font:
-        wght = next(filter(lambda a: a.axisTag == "wght", root_font["fvar"].axes), None)
-        wght_range = range(int(wght.minValue), int(wght.maxValue) + 1)
+    wght_range = icon_font.wght_range(root_font)
 
     os.makedirs(_build_dir(), exist_ok=True)
+    os.makedirs(os.path.join(_build_dir(), "symbols"), exist_ok=True)
     build_file = _resolve_rel_build("build.ninja")
     if FLAGS.gen_ninja:
         logging.info(f"Generating %s", os.path.relpath(build_file))
         with open(build_file, "w") as f:
             nw = ninja_syntax.Writer(f)
             _write_preamble(nw, font_filename, root_font, wght_range)
-            _write_instance_builds(nw, font_filename, wght_range)
+            font_files = _write_font_builds(nw, font_filename, wght_range)
+            _write_symbol_builds(nw, root_font, font_files)
 
-    # TODO: report on failed svgs
-    # this is the delta between inputs and picos
     ninja_cmd = ["ninja", "-C", os.path.dirname(build_file)]
     if FLAGS.exec_ninja:
         print(" ".join(ninja_cmd))
