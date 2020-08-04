@@ -69,7 +69,7 @@ def _draw_svg_path(ttfont, icon_name, dest_region):
     # move up by 80% of upem to hit target box
     transform = transform.translate(0, 0.8 * upem)
 
-    svg_pen = SVGPathPen(None)
+    svg_pen = SVGPathPen(ttfont.getGlyphSet())
     ttfont.getGlyphSet()[glyph_name].draw(TransformPen(svg_pen, transform))
     return " ".join(svg_pen._commands)
 
