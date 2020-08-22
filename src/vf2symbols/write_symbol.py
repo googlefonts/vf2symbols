@@ -65,9 +65,7 @@ def _draw_svg_path(ttfont, icon_name, dest_region):
     glyph_name = icon_font.resolve_ligature(ttfont, icon_name)
     upem = ttfont["head"].unitsPerEm
     transform = _map_font_to_viewbox(upem, dest_region)
-    # TODO(rsheeter) should use better targeting :)
-    # move up by 80% of upem to hit target box
-    transform = transform.translate(0, 0.8 * upem)
+    transform = transform.translate(0, 0.7942 * upem)
 
     svg_pen = SVGPathPen(ttfont.getGlyphSet())
     ttfont.getGlyphSet()[glyph_name].draw(TransformPen(svg_pen, transform))
