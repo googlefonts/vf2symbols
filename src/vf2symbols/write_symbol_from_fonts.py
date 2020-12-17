@@ -27,7 +27,7 @@ import os
 from picosvg.geometric_types import Rect
 from picosvg.svg import SVG
 from vf2symbols import icon_font
-
+from vf2symbols.symbol import Symbol
 
 FLAGS = flags.FLAGS
 
@@ -45,22 +45,6 @@ def _map_font_to_viewbox(upem: int, view_box: Rect):
     )
     return Transform(*affine)
 
-
-def _new_symbol():
-    return SVG.parse(os.path.join(os.path.dirname(__file__), "symbol_template.svg"))
-
-
-def _write_icon(symbol, symbol_wght_name, svg_path):
-    parent = symbol.xpath_one(f'//svg:g[@id="{symbol_wght_name}"]')
-    path = etree.SubElement(parent, "path")
-    path.attrib["d"] = svg_path
-
-
-def _drop_empty_icons(symbol):
-    for empty_icon in symbol.xpath(f"//svg:g[not(*)]"):
-        empty_icon.getparent().remove(empty_icon)
-
-
 def _draw_svg_path(ttfont, icon_name, dest_region):
     glyph_name = icon_font.resolve_ligature(ttfont, icon_name)
     upem = ttfont["head"].unitsPerEm
@@ -76,20 +60,17 @@ def main(argv):
     icon_name = os.path.splitext(os.path.basename(FLAGS.out))[0]
     dest_region = Rect(0, 0, 120, 120)
 
-    symbol = _new_symbol()
+    symbol = Symbol()
 
     for font_filename in argv[1:]:
         ttfont = ttLib.TTFont(font_filename)
         svg_path = _draw_svg_path(ttfont, icon_name, dest_region)
         ttfont.close()
-
         symbol_wght_name = font_filename.split(".")[-2]
-        _write_icon(symbol, symbol_wght_name, svg_path)
+        symbol.write_icon(symbol_wght_name, svg_path)
 
-    _drop_empty_icons(symbol)
-
-    with open(FLAGS.out, "w") as f:
-        f.write(symbol.tostring())
+    symbol.drop_empty_icons()
+    symbol.write_to(FLAGS.out)
 
 
 if __name__ == "__main__":
