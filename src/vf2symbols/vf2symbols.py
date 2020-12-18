@@ -150,7 +150,6 @@ def _write_vf_symbol_builds(nw, ttfont, font_files):
 def _write_svg_symbol_builds(nw, svgs):
     for svg in svgs:
         output = re.sub(r"([.]\w+)$","_symbol\\1",svg)
-        print(output)
         nw.build(output, "write_symbol_from_svg", svg)
 
 
