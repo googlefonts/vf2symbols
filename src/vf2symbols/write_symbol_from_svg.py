@@ -14,22 +14,18 @@
 
 """Generates an Apple custom symbol using an SVG by placing it in the required variant."""
 import os
+import re
 
 from absl import app
 from absl import flags
 from absl import logging
 
 from fontTools import svgLib
-from fontTools.misc import transform
 from fontTools.pens.svgPathPen import SVGPathPen
-from lxml import etree  # pytype: disable=import-error
-from nanoemoji import color_glyph
-from picosvg.geometric_types import Rect
 from picosvg.svg import SVG
 from vf2symbols.symbol import Symbol
 
 _REQUIRED_SYMBOL = "Regular-M"
-_SYMBOL_DY = -95.23 # Centers Medium variants 
 
 FLAGS = flags.FLAGS
 
@@ -37,23 +33,17 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("out", None, "Output file.")
 
 
-def _draw_svg_path(svg_filename):
-    pico = SVG.parse(svg_filename).topicosvg()
-    main_svg = pico.xpath_one("//svg:svg")
-    scale_x = 120 / float(main_svg.get("width"))
-    scale_y = 120 / float(main_svg.get("height"))
-    svg_path = svgLib.SVGPath.fromstring(pico.tostring(), transform.Transform(scale_x,0,0,scale_y,0,_SYMBOL_DY))
-    svg_pen = SVGPathPen(None)
-    svg_path.draw(svg_pen)
-    return " ".join(svg_pen._commands)
+def parse_float(string):
+    return float(re.compile("\d+([.]\d*)?").match(string).group(0))
+    
 
-  
 def main(argv):
     if len(argv) > 2:
         sys.exit("Expected Only 1 non-flag Argument.")
     symbol = Symbol()
-    svg_path = _draw_svg_path(argv[1])   
-    symbol.write_icon(_REQUIRED_SYMBOL, svg_path)
+    pico = SVG.parse(argv[1]).topicosvg()
+    main_svg = pico.xpath_one("//svg:svg")
+    symbol.write_icon(_REQUIRED_SYMBOL, svgLib.SVGPath.fromstring(pico.tostring()), SVGPathPen(None), parse_float(main_svg.get("width")), parse_float(main_svg.get("height")))
     symbol.drop_empty_icons()
     symbol.write_to(FLAGS.out)
     

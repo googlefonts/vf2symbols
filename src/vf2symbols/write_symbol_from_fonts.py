@@ -14,60 +14,39 @@
 
 """Generates an Apple custom symbol using one or more font instances."""
 
+import os
+
 from absl import app
 from absl import flags
 from absl import logging
-from fontTools.misc.transform import Transform
-from fontTools.pens.svgPathPen import SVGPathPen
-from fontTools.pens.transformPen import TransformPen
+
 from fontTools import ttLib
-from lxml import etree  # pytype: disable=import-error
-from nanoemoji import color_glyph
-import os
-from picosvg.geometric_types import Rect
+from fontTools.pens.svgPathPen import SVGPathPen
 from picosvg.svg import SVG
 from vf2symbols import icon_font
 from vf2symbols.symbol import Symbol
 
 FLAGS = flags.FLAGS
 
-
 # internal flags, typically client wouldn't change
 flags.DEFINE_string("out", None, "Output file.")
 
 
-# Borrowed from nanoemoji tests/colr_to_svg.py
-def _map_font_to_viewbox(upem: int, view_box: Rect):
-    if view_box != Rect(0, 0, view_box.w, view_box.w):
-        raise ValueError("We simply must have a SQUARE from 0,0")
-    affine = color_glyph.map_viewbox_to_font_emsquare(
-        Rect(0, 0, upem, upem), view_box.w
-    )
-    return Transform(*affine)
-
-def _draw_svg_path(ttfont, icon_name, dest_region):
+def write_symbol(symbol, ttfont, icon_name, symbol_wght_name):
     glyph_name = icon_font.resolve_ligature(ttfont, icon_name)
     upem = ttfont["head"].unitsPerEm
-    transform = _map_font_to_viewbox(upem, dest_region)
-    transform = transform.translate(0, 0.7942 * upem)
-
-    svg_pen = SVGPathPen(ttfont.getGlyphSet())
-    ttfont.getGlyphSet()[glyph_name].draw(TransformPen(svg_pen, transform))
-    return " ".join(svg_pen._commands)
+    symbol.write_icon(symbol_wght_name, ttfont.getGlyphSet()[glyph_name], SVGPathPen(ttfont.getGlyphSet()), upem, upem, True)
 
 
 def main(argv):
     icon_name = os.path.splitext(os.path.basename(FLAGS.out))[0]
-    dest_region = Rect(0, 0, 120, 120)
 
     symbol = Symbol()
 
     for font_filename in argv[1:]:
         ttfont = ttLib.TTFont(font_filename)
-        svg_path = _draw_svg_path(ttfont, icon_name, dest_region)
+        write_symbol(symbol, ttfont, icon_name, font_filename.split(".")[-2])
         ttfont.close()
-        symbol_wght_name = font_filename.split(".")[-2]
-        symbol.write_icon(symbol_wght_name, svg_path)
 
     symbol.drop_empty_icons()
     symbol.write_to(FLAGS.out)
