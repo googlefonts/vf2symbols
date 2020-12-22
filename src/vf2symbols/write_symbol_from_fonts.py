@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """Generates an Apple custom symbol using one or more font instances."""
-
+import contextlib
 import os
 
 from absl import app
@@ -32,7 +32,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("out", None, "Output file.")
 
 
-def write_symbol(symbol, ttfont, icon_name, symbol_wght_name):
+def update_symbol(symbol, ttfont, icon_name, symbol_wght_name):
     glyph_name = icon_font.resolve_ligature(ttfont, icon_name)
     upem = ttfont["head"].unitsPerEm
     symbol.write_icon(symbol_wght_name, ttfont.getGlyphSet()[glyph_name], SVGPathPen(ttfont.getGlyphSet()), upem, upem, True)
@@ -44,10 +44,9 @@ def main(argv):
     symbol = Symbol()
 
     for font_filename in argv[1:]:
-        ttfont = ttLib.TTFont(font_filename)
-        write_symbol(symbol, ttfont, icon_name, font_filename.split(".")[-2])
-        ttfont.close()
-
+        with contextlib.closing(ttLib.TTFont(font_filename)) as ttfont:
+            update_symbol(symbol, ttfont, icon_name, font_filename.split(".")[-2])
+        
     symbol.drop_empty_icons()
     symbol.write_to(FLAGS.out)
 
