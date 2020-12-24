@@ -23,6 +23,7 @@ from absl import logging
 from fontTools import svgLib
 from fontTools.pens.svgPathPen import SVGPathPen
 from picosvg.svg import SVG
+from picosvg.geometric_types import Rect
 from vf2symbols.symbol import Symbol
 
 _REQUIRED_SYMBOL = "Regular-M"
@@ -43,7 +44,7 @@ def main(argv):
     symbol = Symbol()
     pico = SVG.parse(argv[1]).topicosvg()
     main_svg = pico.xpath_one("//svg:svg")
-    symbol.write_icon(_REQUIRED_SYMBOL, svgLib.SVGPath.fromstring(pico.tostring()), SVGPathPen(None), parse_float(main_svg.get("width")), parse_float(main_svg.get("height")))
+    symbol.write_icon(_REQUIRED_SYMBOL, svgLib.SVGPath.fromstring(pico.tostring()), SVGPathPen(None), Rect(0, 0, parse_float(main_svg.get("width")), parse_float(main_svg.get("height"))))
     symbol.drop_empty_icons()
     symbol.write_to(FLAGS.out)
     

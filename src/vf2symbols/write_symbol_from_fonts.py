@@ -23,6 +23,7 @@ from absl import logging
 from fontTools import ttLib
 from fontTools.pens.svgPathPen import SVGPathPen
 from picosvg.svg import SVG
+from picosvg.geometric_types import Rect
 from vf2symbols import icon_font
 from vf2symbols.symbol import Symbol
 
@@ -35,7 +36,7 @@ flags.DEFINE_string("out", None, "Output file.")
 def update_symbol(symbol, ttfont, icon_name, symbol_wght_name):
     glyph_name = icon_font.resolve_ligature(ttfont, icon_name)
     upem = ttfont["head"].unitsPerEm
-    symbol.write_icon(symbol_wght_name, ttfont.getGlyphSet()[glyph_name], SVGPathPen(ttfont.getGlyphSet()), upem, upem, True)
+    symbol.write_icon(symbol_wght_name, ttfont.getGlyphSet()[glyph_name], SVGPathPen(ttfont.getGlyphSet()), Rect(0, upem, upem, -upem))
 
 
 def main(argv):

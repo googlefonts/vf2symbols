@@ -22,9 +22,10 @@ from lxml import etree  # pytype: disable=import-error
 from nanoemoji import color_glyph
 from picosvg.geometric_types import Rect
 from picosvg.svg import SVG
+from picosvg.svg_transform import Affine2D
 
 _SYMBOL_SIZE = 120
-_SYMBOL_DY_MULTIPLE = 0.7942
+_SYMBOL_DY_MULTIPLE = -0.7942
 
 
 class Symbol():
@@ -33,22 +34,19 @@ class Symbol():
         self.symbol = SVG.parse(os.path.join(os.path.dirname(__file__), "symbol_template.svg"))
 
     
-    def write_icon(self, symbol_wght_name, svg_path, svg_pen, x_size, y_size, from_font=False):
+    def write_icon(self, symbol_wght_name, svg_path, svg_pen, rect):
         parent = self.symbol.xpath_one(f'//svg:g[@id="{symbol_wght_name}"]')
         path = etree.SubElement(parent, "path")
-        path.attrib["d"] = self._draw_svg_path(svg_path, svg_pen, self._build_transformation(from_font, x_size, y_size))
+        path.attrib["d"] = self._draw_svg_path(svg_path, svg_pen, self._build_transformation(rect))
         
         
     def _draw_svg_path(self, svg_path, svg_pen, transform):
         svg_path.draw(TransformPen(svg_pen, transform))
         return " ".join(svg_pen._commands) 
        
-        
-    def _build_transformation(self, from_font, x_size, y_size):
-        if from_font:
-            return Transform(*color_glyph.map_viewbox_to_font_emsquare(Rect(0, 0, x_size, y_size), _SYMBOL_SIZE)).translate(0,_SYMBOL_DY_MULTIPLE * y_size)
-        else:
-            return Transform(_SYMBOL_SIZE/x_size, 0, 0, _SYMBOL_SIZE/y_size, 0, 0).translate(0,-_SYMBOL_DY_MULTIPLE * y_size)
+    def _build_transformation(self, rect):
+        return Affine2D.rect_to_rect(rect, Rect(0, 0, _SYMBOL_SIZE, _SYMBOL_SIZE)).translate(0, _SYMBOL_DY_MULTIPLE * rect.h)
+
         
               
     def drop_empty_icons(self):
