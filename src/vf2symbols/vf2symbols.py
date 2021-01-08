@@ -20,17 +20,19 @@ Assumes a ligature exists for each symbol and infers the name from it.
 Requires a very simple GSUB ligature layout for the time being. There is no
 good reason for this beyond making proof of concept tool setup easier.
 """
+import os
+import re
+import regex
+import subprocess
+import sys
 
 from absl import app
 from absl import flags
 from absl import logging
+
 from fontTools.varLib import instancer
 from fontTools import ttLib
 from ninja import ninja_syntax
-import os
-import regex
-import subprocess
-import sys
 from vf2symbols import icon_font
 
 
@@ -44,6 +46,8 @@ flags.DEFINE_bool("exec_ninja", True, "Whether to run ninja.")
 flags.DEFINE_string(
     "icon_filter", ".*", "Discard icon names that don't contain this regex."
 )
+flags.DEFINE_string("font", None, "Font filepath to extract the icons from.")
+flags.DEFINE_list("svgs", [], "SVG filepaths, for a single variant(Regular-M) symbol generation.")
 
 # TODO(rsheeter) support opsz to populate S/M/L
 _SYMBOL_NAME_FONT_WEIGHTS = (
@@ -117,7 +121,8 @@ def _write_preamble(nw, font_filename, ttfont, wght_range):
         _write_instance_rule(nw, ttfont, symbol_name)
     nw.newline()
 
-    module_rule("write_symbol", "--out $out $in")
+    module_rule("write_symbol_from_fonts", "--out $out $in")
+    module_rule("write_symbol_from_svg", "--out $out $in")
 
 
 def _font_file(font_filename, symbol_wght_name):
@@ -133,24 +138,31 @@ def _write_font_builds(nw, font_filename, wght_range):
     return font_files
 
 
-def _write_symbol_builds(nw, ttfont, font_files):
+def _write_vf_symbol_builds(nw, ttfont, font_files):
     for icon_name in icon_font.extract_icon_names(
         ttfont, regex.compile(FLAGS.icon_filter)
     ):
         nw.build(
-            os.path.join("symbols", icon_name + ".svg"), "write_symbol", font_files
+            os.path.join("symbols", icon_name + ".svg"), "write_symbol_from_fonts", font_files
         )
+        
+        
+def _write_svg_symbol_builds(nw, svgs):
+    for svg in svgs:
+        output = re.sub(r"([.]\w+)$","_symbol\\1",svg)
+        nw.build(output, "write_symbol_from_svg", svg)
+
 
 
 def _run(argv):
-    if len(argv) != 2:
-        sys.exit("Expected 1 non-flag argument, a font filename")
-    font_filename = os.path.abspath(argv[1])
+    if len(argv) > 1:
+        sys.exit("Unexpected  non-flag arguments")
+    font_filename = os.path.abspath(FLAGS.font)
     root_font = ttLib.TTFont(font_filename)
     wght_range = icon_font.wght_range(root_font)
 
     os.makedirs(_build_dir(), exist_ok=True)
-    os.makedirs(os.path.join(_build_dir(), "symbols"), exist_ok=True)
+    os.makedirs(_resolve_rel_build("symbols"), exist_ok=True)
     build_file = _resolve_rel_build("build.ninja")
     if FLAGS.gen_ninja:
         logging.info(f"Generating %s", os.path.relpath(build_file))
@@ -158,7 +170,8 @@ def _run(argv):
             nw = ninja_syntax.Writer(f)
             _write_preamble(nw, font_filename, root_font, wght_range)
             font_files = _write_font_builds(nw, font_filename, wght_range)
-            _write_symbol_builds(nw, root_font, font_files)
+            _write_vf_symbol_builds(nw, root_font, font_files)
+            _write_svg_symbol_builds(nw, FLAGS.svgs)
 
     ninja_cmd = ["ninja", "-C", os.path.dirname(build_file)]
     if FLAGS.exec_ninja:
