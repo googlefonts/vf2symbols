@@ -36,6 +36,7 @@ flags.DEFINE_string("out", None, "Output file.")
 def update_symbol(symbol, ttfont, icon_name, symbol_wght_name):
     glyph_name = icon_font.resolve_ligature(ttfont, icon_name)
     upem = ttfont["head"].unitsPerEm
+    # For Icon fonts, the Glyphs are Y shifted by upem and the Y axis is flipped.
     symbol.write_icon(symbol_wght_name, ttfont.getGlyphSet()[glyph_name], SVGPathPen(ttfont.getGlyphSet()), Rect(0, upem, upem, -upem))
 
 
