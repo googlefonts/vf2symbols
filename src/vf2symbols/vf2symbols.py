@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Create a set of Apple custom symbols from a variable font.
 
 Instantiates along wght to populate weight if a wght axis exists.
@@ -30,14 +29,12 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from fontTools.varLib import instancer
 from fontTools import ttLib
+from fontTools.varLib import instancer
 from ninja import ninja_syntax
 from vf2symbols import icon_font
 
-
 FLAGS = flags.FLAGS
-
 
 # internal flags, typically client wouldn't change
 flags.DEFINE_string("build_dir", "build/", "Where build runs.")
@@ -47,7 +44,9 @@ flags.DEFINE_string(
     "icon_filter", ".*", "Discard icon names that don't contain this regex."
 )
 flags.DEFINE_string("font", None, "Font filepath to extract the icons from.")
-flags.DEFINE_list("svgs", [], "SVG filepaths, for a single variant(Regular-M) symbol generation.")
+flags.DEFINE_list(
+    "svgs", [], "SVG filepaths, for a single variant(Regular-M) symbol generation."
+)
 
 # TODO(rsheeter) support opsz to populate S/M/L
 _SYMBOL_NAME_FONT_WEIGHTS = (
@@ -143,15 +142,16 @@ def _write_vf_symbol_builds(nw, ttfont, font_files):
         ttfont, regex.compile(FLAGS.icon_filter)
     ):
         nw.build(
-            os.path.join("symbols", icon_name + ".svg"), "write_symbol_from_fonts", font_files
+            os.path.join("symbols", icon_name + ".svg"),
+            "write_symbol_from_fonts",
+            font_files,
         )
-        
-        
+
+
 def _write_svg_symbol_builds(nw, svgs):
     for svg in svgs:
-        output = re.sub(r"([.]\w+)$","_symbol\\1",svg)
+        output = re.sub(r"([.]\w+)$", "_symbol\\1", svg)
         nw.build(output, "write_symbol_from_svg", svg)
-
 
 
 def _run(argv):
