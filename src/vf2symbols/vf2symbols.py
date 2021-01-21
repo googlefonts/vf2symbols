@@ -43,10 +43,7 @@ flags.DEFINE_bool("exec_ninja", True, "Whether to run ninja.")
 flags.DEFINE_string(
     "icon_filter", ".*", "Discard icon names that don't contain this regex."
 )
-flags.DEFINE_string("font", None, "Font filepath to extract the icons from.")
-flags.DEFINE_list(
-    "svgs", [], "SVG filepaths, for a single variant(Regular-M) symbol generation."
-)
+
 
 # TODO(rsheeter) support opsz to populate S/M/L
 _SYMBOL_NAME_FONT_WEIGHTS = (
@@ -121,7 +118,6 @@ def _write_preamble(nw, font_filename, ttfont, wght_range):
     nw.newline()
 
     module_rule("write_symbol_from_fonts", "--out $out $in")
-    module_rule("write_symbol_from_svg", "--out $out $in")
 
 
 def _font_file(font_filename, symbol_wght_name):
@@ -148,16 +144,10 @@ def _write_vf_symbol_builds(nw, ttfont, font_files):
         )
 
 
-def _write_svg_symbol_builds(nw, svgs):
-    for svg in svgs:
-        output = re.sub(r"([.]\w+)$", "_symbol\\1", svg)
-        nw.build(output, "write_symbol_from_svg", svg)
-
-
 def _run(argv):
-    if len(argv) > 1:
-        sys.exit("Unexpected  non-flag arguments")
-    font_filename = os.path.abspath(FLAGS.font)
+    if len(argv) != 2:
+        sys.exit("Expected 1 non-flag arguments")
+    font_filename = os.path.abspath(argv[1])
     root_font = ttLib.TTFont(font_filename)
     wght_range = icon_font.wght_range(root_font)
 
@@ -171,7 +161,6 @@ def _run(argv):
             _write_preamble(nw, font_filename, root_font, wght_range)
             font_files = _write_font_builds(nw, font_filename, wght_range)
             _write_vf_symbol_builds(nw, root_font, font_files)
-            _write_svg_symbol_builds(nw, FLAGS.svgs)
 
     ninja_cmd = ["ninja", "-C", os.path.dirname(build_file)]
     if FLAGS.exec_ninja:
