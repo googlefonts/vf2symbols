@@ -8,6 +8,7 @@ Usage:
 ```shell
 pip install -e .
 vf2symbols path-to-variable-icon-font.ttf
+python3 -m vf2symbols.svg2symbols path-to-svg.svg [path-to-another-svg.svg ...]
 # ...
 # build/symbols has your symbols
 ```

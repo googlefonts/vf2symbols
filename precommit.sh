@@ -21,7 +21,7 @@
 set -e
 
 black src tests
-#pytest
+pytest
 #pytype
 
 echo "Seems OK :)"
