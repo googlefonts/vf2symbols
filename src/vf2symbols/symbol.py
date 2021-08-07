@@ -26,9 +26,9 @@ from picosvg.svg_transform import Affine2D
 _SYMBOL_SIZE = 120
 # https://developer.apple.com/documentation/uikit/uiimage/creating_custom_symbol_images_for_your_app#3369941
 _SYMBOL_SCALE = {"S": 0.789, "M": 1, "L": 1.29}
+# (Capline Y - Baseline Y ) / 2
+_CENTER_LINE = -35.23
 
-# This value was chosen by a designer to center the SVG inside the template.
-_SYMBOL_DY_MULTIPLE = -0.7942
 _SYMBOL_FILEPATH = os.path.join(os.path.dirname(__file__), "symbol_template.svg")
 
 
@@ -65,8 +65,8 @@ class Symbol:
     def _build_transformation(self, symbol_name, rect):
         symbol_size = self._symbol_size(symbol_name)
         return Affine2D.rect_to_rect(
-            rect, Rect(0, 0, symbol_size, symbol_size)
-        ).translate(0, _SYMBOL_DY_MULTIPLE * rect.h)
+            rect, Rect(0, _CENTER_LINE - (symbol_size / 2), symbol_size, symbol_size)
+        )
 
     def _symbol_size(self, symbol):
         return _SYMBOL_SCALE[symbol[-1]] * _SYMBOL_SIZE
