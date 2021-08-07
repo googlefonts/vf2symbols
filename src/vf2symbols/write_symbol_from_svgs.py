@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ Takes one or more space seperated pairs of symbol name and its SVG filepath.
 https://developer.apple.com/documentation/uikit/uiimage/creating_custom_symbol_images_for_your_app#3369885
 
 Usage:
-write_symbol_from_svgs.py -out [output path] [symbol_layer_name=svg_path ....]
+write_symbol_from_svgs.py --out [output path] [symbol_layer_name=svg_path ....]
 
 Example:
-write_symbol_from_svgs.py -out apple_symbol.svg Regular-M=regular.svg Regular-L=large.svg
+write_symbol_from_svgs.py --out apple_symbol.svg Regular-M=regular.svg Regular-L=large.svg
 """
 import re
 import sys
@@ -38,8 +38,8 @@ from vf2symbols.symbol import Symbol
 
 FLAGS = flags.FLAGS
 
-# internal flags, typically client wouldn't change
-flags.DEFINE_string("out", None, "Output file.")
+
+flags.DEFINE_string("out", None, "Output file, None will output to stdout.")
 
 
 def parse_float(string):

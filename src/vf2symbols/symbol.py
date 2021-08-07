@@ -76,5 +76,8 @@ class Symbol:
             empty_icon.getparent().remove(empty_icon)
 
     def write_to(self, filename):
-        with open(filename, "w") as f:
-            f.write(self.symbol.tostring())
+        if filename:
+            with open(filename, "w") as f:
+                f.write(self.symbol.tostring())
+        else:
+            print(self.symbol.tostring())
