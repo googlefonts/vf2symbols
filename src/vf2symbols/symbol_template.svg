@@ -67,23 +67,32 @@
         />
  </g>
  <g id="Symbols">
-  <g id="Black-M" transform="matrix(1 0 0 1 2872.8 1126)">
-  </g>
-  <g id="Heavy-M" transform="matrix(1 0 0 1 2577.22 1126)">
-  </g>
-  <g id="Bold-M" transform="matrix(1 0 0 1 2281.8 1126)">
-  </g>
-  <g id="Semibold-M" transform="matrix(1 0 0 1 1985.97 1126)">
-  </g>
-  <g id="Medium-M" transform="matrix(1 0 0 1 1689.91 1126)">
-  </g>
-  <g id="Regular-M" transform="matrix(1 0 0 1 1394.06 1126)">
-  </g>
-  <g id="Light-M" transform="matrix(1 0 0 1 1098.18 1126)">
-  </g>
-  <g id="Thin-M" transform="matrix(1 0 0 1 802.565 1126)">
-  </g>
-  <g id="Ultralight-M" transform="matrix(1 0 0 1 506.415 1126)">
-  </g>
+  <g id="Black-L" transform="matrix(1 0 0 1 2856.76 1556)"></g>
+  <g id="Heavy-L" transform="matrix(1 0 0 1 2561.32 1556)"></g>
+  <g id="Bold-L" transform="matrix(1 0 0 1 2266 1556)"></g>
+  <g id="Semibold-L" transform="matrix(1 0 0 1 1970.27 1556)"></g>
+  <g id="Medium-L" transform="matrix(1 0 0 1 1674.31 1556)"></g>
+  <g id="Regular-L" transform="matrix(1 0 0 1 1378.56 1556)"></g>
+  <g id="Light-L" transform="matrix(1 0 0 1 1082.77 1556)"></g>
+  <g id="Thin-L" transform="matrix(1 0 0 1 787.282 1556)"></g>
+  <g id="Ultralight-L" transform="matrix(1 0 0 1 491.205 1556)"></g>
+  <g id="Black-M" transform="matrix(1 0 0 1 2872.8 1126)"></g>
+  <g id="Heavy-M" transform="matrix(1 0 0 1 2577.22 1126)"></g>
+  <g id="Bold-M" transform="matrix(1 0 0 1 2281.8 1126)"></g>
+  <g id="Semibold-M" transform="matrix(1 0 0 1 1985.97 1126)"></g>
+  <g id="Medium-M" transform="matrix(1 0 0 1 1689.91 1126)"></g>
+  <g id="Regular-M" transform="matrix(1 0 0 1 1394.06 1126)"></g>
+  <g id="Light-M" transform="matrix(1 0 0 1 1098.18 1126)"></g>
+  <g id="Thin-M" transform="matrix(1 0 0 1 802.565 1126)"></g>
+  <g id="Ultralight-M" transform="matrix(1 0 0 1 506.415 1126)"></g>
+  <g id="Black-S" transform="matrix(1 0 0 1 2885.99 696)"></g>
+  <g id="Heavy-S" transform="matrix(1 0 0 1 2590.06 696)"></g>
+  <g id="Bold-S" transform="matrix(1 0 0 1 2294.23 696)"></g>
+  <g id="Semibold-S" transform="matrix(1 0 0 1 1998.1 696)"></g>
+  <g id="Medium-S" transform="matrix(1 0 0 1 1701.85 696)"></g>
+  <g id="Regular-S" transform="matrix(1 0 0 1 1405.73 696)"></g>
+  <g id="Light-S" transform="matrix(1 0 0 1 1109.75 696)"></g>
+  <g id="Thin-S" transform="matrix(1 0 0 1 814.015 696)"></g>
+  <g id="Ultralight-S" transform="matrix(1 0 0 1 517.792 696)"></g>
  </g>
 </svg>
