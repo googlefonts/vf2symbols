@@ -56,16 +56,17 @@ def main(argv):
         layer_name, svg_path = arg.split("=")
         pico = SVG.parse(svg_path).topicosvg()
         main_svg = pico.xpath_one("//svg:svg")
+        if main_svg.get('viewBox'):
+            view = main_svg.get('viewBox').split(' ')
+            assert len(view) == 4
+            rect = Rect(parse_float(view[0]), parse_float(view[1]), parse_float(view[2]),parse_float(view[3]))
+        else:
+            rect = Rect(0, 0, parse_float(main_svg.get('width')), parse_float(main_svg.get('height')))
         symbol.write_icon(
             layer_name,
             svgLib.SVGPath.fromstring(pico.tostring()),
             SVGPathPen(None),
-            Rect(
-                0,
-                0,
-                parse_float(main_svg.get("width")),
-                parse_float(main_svg.get("height")),
-            ),
+            rect,
         )
     symbol.drop_empty_icons()
     symbol.write_to(FLAGS.out)
@@ -73,3 +74,4 @@ def main(argv):
 
 if __name__ == "__main__":
     app.run(main)
+
