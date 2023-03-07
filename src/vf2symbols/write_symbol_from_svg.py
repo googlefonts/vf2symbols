@@ -23,38 +23,16 @@ from fontTools.pens.svgPathPen import SVGPathPen
 from picosvg.geometric_types import Rect
 from picosvg.svg import SVG
 from vf2symbols.symbol import Symbol
+from vf2symbols import write_symbol_from_svgs
 
 _REQUIRED_SYMBOL = "Regular-M"
 
-FLAGS = flags.FLAGS
-
-# internal flags, typically client wouldn't change
-flags.DEFINE_string("out", None, "Output file.")
-
-
-def parse_float(string):
-    return float(re.compile("\d+([.]\d*)?").match(string).group(0))
 
 
 def main(argv):
     if len(argv) > 2:
         sys.exit("Expected Only 1 non-flag Argument.")
-    symbol = Symbol()
-    pico = SVG.parse(argv[1]).topicosvg()
-    main_svg = pico.xpath_one("//svg:svg")
-    symbol.write_icon(
-        _REQUIRED_SYMBOL,
-        svgLib.SVGPath.fromstring(pico.tostring()),
-        SVGPathPen(None),
-        Rect(
-            0,
-            0,
-            parse_float(main_svg.get("width")),
-            parse_float(main_svg.get("height")),
-        ),
-    )
-    symbol.drop_empty_icons()
-    symbol.write_to(FLAGS.out)
+    write_symbol_from_svgs.main([argv[0], f'{_REQUIRED_SYMBOL}={argv[1]}'])
 
 
 if __name__ == "__main__":
