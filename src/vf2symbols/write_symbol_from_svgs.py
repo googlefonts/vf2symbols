@@ -65,7 +65,7 @@ def main(argv):
         symbol.write_icon(
             layer_name,
             svgLib.SVGPath.fromstring(pico.tostring()),
-            SVGPathPen(None),
+            SVGPathPen(None, ntos=lambda pt: f'{pt:.3f}'.rstrip('0').rstrip('.')),
             rect,
         )
     symbol.drop_empty_icons()
